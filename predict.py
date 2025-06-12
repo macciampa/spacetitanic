@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler, LabelEncoder
 import joblib
 import warnings
 warnings.filterwarnings('ignore')
@@ -15,36 +14,13 @@ passenger_ids = test_df['PassengerId']
 # Prepare features (same as in training)
 X_test = test_df.drop(['PassengerId'], axis=1)
 
-# Handle categorical variables
-categorical_cols = X_test.select_dtypes(include=['object']).columns
-numerical_cols = X_test.select_dtypes(include=['int64', 'float64']).columns
-
-# Create a copy of features for preprocessing
-X_test_processed = X_test.copy()
-
-# Fill missing values
-for col in numerical_cols:
-    X_test_processed[col].fillna(X_test_processed[col].median(), inplace=True)
-
-for col in categorical_cols:
-    X_test_processed[col].fillna(X_test_processed[col].mode()[0], inplace=True)
-
-# Encode categorical variables
-le = LabelEncoder()
-for col in categorical_cols:
-    X_test_processed[col] = le.fit_transform(X_test_processed[col])
-
-# Scale numerical features
-scaler = StandardScaler()
-X_test_processed[numerical_cols] = scaler.fit_transform(X_test_processed[numerical_cols])
-
-# Load the trained model
-print("Loading trained model...")
-model = joblib.load('titanic_model.joblib')
+# Load the trained pipeline
+print("Loading trained pipeline...")
+pipeline = joblib.load('titanic_model.joblib')
 
 # Make predictions
 print("Making predictions...")
-predictions = model.predict(X_test_processed)
+predictions = pipeline.predict(X_test)
 
 # Create submission dataframe
 submission_df = pd.DataFrame({
