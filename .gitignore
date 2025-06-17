@@ -1,4 +1,2 @@
 *~
-*.joblib
-*.png
-submission.csv
+data_out/*
