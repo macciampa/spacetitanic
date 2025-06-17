@@ -22,6 +22,9 @@ pipeline = joblib.load('titanic_model.joblib')
 print("Making predictions...")
 predictions = pipeline.predict(X_test)
 
+# Convert predictions to True/False
+predictions = predictions.astype(bool)
+
 # Create submission dataframe
 submission_df = pd.DataFrame({
     'PassengerId': passenger_ids,
