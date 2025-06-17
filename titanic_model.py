@@ -20,6 +20,9 @@ def train_model():
     print("Loading training data...")
     df = pd.read_csv('data_in/train.csv')
 
+    # Create Infant feature
+    df['Infant'] = df['Age'].fillna(-1) <= 4
+
     # Display basic information about the dataset
     print("\nDataset Info:")
     print(df.info())
@@ -31,7 +34,7 @@ def train_model():
     y = df['Transported']
 
     # Handle categorical variables
-    categorical_cols = X.select_dtypes(include=['object']).columns
+    categorical_cols = X.select_dtypes(include=['object', 'bool']).columns
     numerical_cols = X.select_dtypes(include=['int64', 'float64']).columns
 
     # Create preprocessing pipelines
@@ -92,6 +95,9 @@ def make_predictions(pipeline=None):
     # Load the test data
     print("Loading test data...")
     test_df = pd.read_csv('data_in/test.csv')
+
+    # Create Infant feature
+    test_df['Infant'] = test_df['Age'].fillna(-1) <= 4
 
     # Save PassengerId for submission
     passenger_ids = test_df['PassengerId']
