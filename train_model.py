@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import cross_val_score, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report
@@ -54,17 +53,8 @@ pipeline = Pipeline([
     ('classifier', RandomForestClassifier(n_estimators=100, random_state=42))
 ])
 
-# Perform cross-validation
-print("\nPerforming 5-fold cross-validation...")
-cv = KFold(n_splits=5, shuffle=True, random_state=42)
-cv_scores = cross_val_score(pipeline, X, y, cv=cv, scoring='accuracy')
-
-print("\nCross-validation scores:")
-print(f"Individual fold scores: {cv_scores}")
-print(f"Mean CV score: {cv_scores.mean():.4f} (+/- {cv_scores.std() * 2:.4f})")
-
-# Train final model on all data
-print("\nTraining final model on all data...")
+# Train model on all data
+print("\nTraining model...")
 pipeline.fit(X, y)
 
 # Get feature names after preprocessing
