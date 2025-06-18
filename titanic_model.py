@@ -8,7 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 import joblib
 import warnings
 import os
-from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap
+from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram
 warnings.filterwarnings('ignore')
 
 # Debug flag
@@ -28,6 +28,9 @@ def engineer_features(df):
     # Create TotalSpent feature
     spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
     df['TotalSpent'] = df[spending_columns].fillna(0).sum(axis=1)
+
+    # Create NoMoney feature
+    df['NoMoney'] = df['TotalSpent'] == 0
 
     # Split Cabin into Deck and Side features
     df[['Deck', 'Num', 'Side']] = df['Cabin'].str.split('/', expand=True)
@@ -55,6 +58,7 @@ def train_model():
         create_deck_side_heatmap(df)
         create_age_survival_histogram(df)
         create_destination_homeplanet_heatmap(df)
+        create_spending_survival_histogram(df)
 
     # Display basic information about the dataset
     print("\nDataset Info:")

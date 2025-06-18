@@ -130,4 +130,53 @@ def create_destination_homeplanet_heatmap(df):
     
     # Print summary statistics
     print("\nDestination/Home Planet Transport Statistics:")
-    print(pivot_data.sort_values('transport_percentage', ascending=False)) 
+    print(pivot_data.sort_values('transport_percentage', ascending=False))
+
+def create_spending_survival_histogram(df):
+    """Create a histogram showing spending distribution and survival percentage by spending bins"""
+    # Create figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+    
+    # Plot 1: TotalSpent distribution
+    ax1.hist(df['TotalSpent'].dropna(), bins=30, alpha=0.7, color='lightgreen', edgecolor='black')
+    ax1.set_title('Total Spending Distribution', fontsize=14, pad=10)
+    ax1.set_xlabel('Total Amount Spent')
+    ax1.set_ylabel('Count')
+    ax1.grid(True, alpha=0.3)
+    
+    # Plot 2: Survival percentage by spending bins
+    # Create spending bins
+    spending_bins = [0, 0.1, 25, 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000, 50000, 75000, 100000, float('inf')]
+    spending_labels = ['0', '1-25', '26-50', '51-100', '101-200', '201-300', '301-500', '501-750', '751-1K', '1K-1.5K', '1.5K-2K', '2K-3K', '3K-5K', '5K-7.5K', '7.5K-10K', '10K-15K', '15K-20K', '20K-30K', '30K-50K', '50K-75K', '75K-100K', '100K+']
+    
+    df['SpendingGroup'] = pd.cut(df['TotalSpent'], bins=spending_bins, labels=spending_labels, include_lowest=True)
+    spending_survival = df.groupby('SpendingGroup')['Transported'].agg(['count', 'sum']).reset_index()
+    spending_survival['survival_percentage'] = (spending_survival['sum'] / spending_survival['count'] * 100).round(1)
+    
+    # Create bar plot
+    bars = ax2.bar(range(len(spending_survival)), spending_survival['survival_percentage'], 
+                   color='gold', alpha=0.7, edgecolor='black')
+    ax2.set_title('Survival Percentage by Spending Group', fontsize=14, pad=10)
+    ax2.set_xlabel('Spending Group')
+    ax2.set_ylabel('Survival Percentage (%)')
+    ax2.set_xticks(range(len(spending_survival)))
+    ax2.set_xticklabels(spending_survival['SpendingGroup'], rotation=45)
+    ax2.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for bar, percentage, count in zip(bars, spending_survival['survival_percentage'], spending_survival['count']):
+        height = bar.get_height()
+        ax2.text(bar.get_x() + bar.get_width()/2., height + 1,
+                f'{percentage}%', ha='center', va='bottom', fontweight='bold', fontsize=9)
+        ax2.text(bar.get_x() + bar.get_width()/2., height/2,
+                f'n={count}', ha='center', va='center', fontweight='bold', color='white', fontsize=8)
+    
+    plt.tight_layout()
+    plt.savefig('data_out/spending_survival_histogram.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print("Spending survival histogram saved to data_out/spending_survival_histogram.png")
+    
+    # Print spending group statistics
+    print("\nSpending Group Survival Statistics:")
+    print(spending_survival[['SpendingGroup', 'count', 'survival_percentage']].sort_values('survival_percentage', ascending=False)) 
