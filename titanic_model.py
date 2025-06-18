@@ -27,6 +27,11 @@ def train_model():
     spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
     df['TotalSpent'] = df[spending_columns].fillna(0).sum(axis=1)
 
+    # Split Cabin into Deck and Side features
+    df[['Deck', 'Num', 'Side']] = df['Cabin'].str.split('/', expand=True)
+    df['Side'] = df['Side'].fillna('Unknown')  # Handle missing values
+    df['Deck'] = df['Deck'].fillna('Unknown')  # Handle missing values
+
     # Display basic information about the dataset
     print("\nDataset Info:")
     print(df.info())
@@ -34,7 +39,7 @@ def train_model():
     print(df.isnull().sum())
 
     # Separate features and target
-    X = df.drop(['Transported', 'PassengerId'], axis=1)
+    X = df.drop(['Transported', 'PassengerId', 'Name', 'Cabin', 'Num'], axis=1)
     y = df['Transported']
 
     # Handle categorical variables
@@ -79,6 +84,15 @@ def train_model():
     # Get feature names after preprocessing
     feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
 
+    # Save feature names to text file
+    with open('data_out/feature_names.txt', 'w') as f:
+        f.write("All feature names after preprocessing:\n")
+        f.write("=" * 50 + "\n")
+        for i, feature_name in enumerate(feature_names, 1):
+            f.write(f"{i:3d}. {feature_name}\n")
+        f.write(f"\nTotal number of features after preprocessing: {len(feature_names)}")
+    print(f"\nFeature names saved to data_out/feature_names.txt")
+
     # Get feature importance
     feature_importance = pd.DataFrame({
         'feature': feature_names,
@@ -106,6 +120,11 @@ def make_predictions(pipeline=None):
     # Create TotalSpent feature
     spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
     test_df['TotalSpent'] = test_df[spending_columns].fillna(0).sum(axis=1)
+
+    # Split Cabin into Deck and Side features
+    test_df[['Deck', 'Num', 'Side']] = test_df['Cabin'].str.split('/', expand=True)
+    test_df['Side'] = test_df['Side'].fillna('Unknown')  # Handle missing values
+    test_df['Deck'] = test_df['Deck'].fillna('Unknown')  # Handle missing values
 
     # Save PassengerId for submission
     passenger_ids = test_df['PassengerId']
