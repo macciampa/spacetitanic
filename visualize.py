@@ -11,9 +11,24 @@ def create_deck_side_heatmap(df):
     # Create pivot table for heatmap
     heatmap_data = pivot_data.pivot(index='Deck', columns='Side', values='transport_percentage')
     
+    # Create pivot table for counts
+    count_data = pivot_data.pivot(index='Deck', columns='Side', values='count')
+    
     # Create the heatmap
     plt.figure(figsize=(10, 8))
-    sns.heatmap(heatmap_data, annot=True, fmt='.1f', cmap='RdYlBu_r', 
+    
+    # Create custom annotations with percentage and count
+    annot_data = heatmap_data.copy()
+    for deck in heatmap_data.index:
+        for side in heatmap_data.columns:
+            if pd.notna(heatmap_data.loc[deck, side]) and pd.notna(count_data.loc[deck, side]):
+                percentage = heatmap_data.loc[deck, side]
+                count = int(count_data.loc[deck, side])
+                annot_data.loc[deck, side] = f"{percentage}% ({count})"
+            else:
+                annot_data.loc[deck, side] = ""
+    
+    sns.heatmap(heatmap_data, annot=annot_data, fmt='', cmap='RdYlBu_r', 
                 cbar_kws={'label': 'Transport Percentage (%)'})
     plt.title('Transport Percentage by Deck and Side', fontsize=16, pad=20)
     plt.xlabel('Side', fontsize=12)

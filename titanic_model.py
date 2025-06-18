@@ -34,6 +34,9 @@ def engineer_features(df):
     df['Side'] = df['Side'].fillna('Unknown')  # Handle missing values
     df['Deck'] = df['Deck'].fillna('Unknown')  # Handle missing values
     
+    # Create StarboardBC feature
+    df['StarboardBC'] = (df['Deck'].isin(['B', 'C'])) & (df['Side'] == 'S')
+    
     return df
 
 def train_model():
