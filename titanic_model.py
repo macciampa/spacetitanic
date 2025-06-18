@@ -15,11 +15,8 @@ warnings.filterwarnings('ignore')
 # Create output directory if it doesn't exist
 os.makedirs('data_out', exist_ok=True)
 
-def train_model():
-    # Load the data
-    print("Loading training data...")
-    df = pd.read_csv('data_in/train.csv')
-
+def engineer_features(df):
+    """Apply feature engineering to the dataset"""
     # Create Infant feature
     df['Infant'] = df['Age'].fillna(-1) <= 4
 
@@ -31,6 +28,16 @@ def train_model():
     df[['Deck', 'Num', 'Side']] = df['Cabin'].str.split('/', expand=True)
     df['Side'] = df['Side'].fillna('Unknown')  # Handle missing values
     df['Deck'] = df['Deck'].fillna('Unknown')  # Handle missing values
+    
+    return df
+
+def train_model():
+    # Load the data
+    print("Loading training data...")
+    df = pd.read_csv('data_in/train.csv')
+
+    # Apply feature engineering
+    df = engineer_features(df)
 
     # Display basic information about the dataset
     print("\nDataset Info:")
@@ -114,17 +121,8 @@ def make_predictions(pipeline=None):
     print("Loading test data...")
     test_df = pd.read_csv('data_in/test.csv')
 
-    # Create Infant feature
-    test_df['Infant'] = test_df['Age'].fillna(-1) <= 4
-
-    # Create TotalSpent feature
-    spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
-    test_df['TotalSpent'] = test_df[spending_columns].fillna(0).sum(axis=1)
-
-    # Split Cabin into Deck and Side features
-    test_df[['Deck', 'Num', 'Side']] = test_df['Cabin'].str.split('/', expand=True)
-    test_df['Side'] = test_df['Side'].fillna('Unknown')  # Handle missing values
-    test_df['Deck'] = test_df['Deck'].fillna('Unknown')  # Handle missing values
+    # Apply feature engineering
+    test_df = engineer_features(test_df)
 
     # Save PassengerId for submission
     passenger_ids = test_df['PassengerId']
