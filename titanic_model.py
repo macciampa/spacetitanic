@@ -23,6 +23,10 @@ def train_model():
     # Create Infant feature
     df['Infant'] = df['Age'].fillna(-1) <= 4
 
+    # Create TotalSpent feature
+    spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
+    df['TotalSpent'] = df[spending_columns].fillna(0).sum(axis=1)
+
     # Display basic information about the dataset
     print("\nDataset Info:")
     print(df.info())
@@ -98,6 +102,10 @@ def make_predictions(pipeline=None):
 
     # Create Infant feature
     test_df['Infant'] = test_df['Age'].fillna(-1) <= 4
+
+    # Create TotalSpent feature
+    spending_columns = ['RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck']
+    test_df['TotalSpent'] = test_df[spending_columns].fillna(0).sum(axis=1)
 
     # Save PassengerId for submission
     passenger_ids = test_df['PassengerId']
