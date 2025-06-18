@@ -8,7 +8,14 @@ from sklearn.preprocessing import OneHotEncoder
 import joblib
 import warnings
 import os
+from visualize import create_deck_side_heatmap, create_age_survival_histogram
 warnings.filterwarnings('ignore')
+
+# Debug flag
+DEBUG = True
+
+# Visualization flag
+VISUALIZE = True
 
 # Create output directory if it doesn't exist
 os.makedirs('data_out', exist_ok=True)
@@ -36,6 +43,11 @@ def train_model():
 
     # Apply feature engineering
     df = engineer_features(df)
+
+    # Create deck/side heatmap visualization
+    if VISUALIZE:
+        create_deck_side_heatmap(df)
+        create_age_survival_histogram(df)
 
     # Display basic information about the dataset
     print("\nDataset Info:")
@@ -90,13 +102,14 @@ def train_model():
     feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
 
     # Save feature names to text file
-    with open('data_out/feature_names.txt', 'w') as f:
-        f.write("All feature names after preprocessing:\n")
-        f.write("=" * 50 + "\n")
-        for i, feature_name in enumerate(feature_names, 1):
-            f.write(f"{i:3d}. {feature_name}\n")
-        f.write(f"\nTotal number of features after preprocessing: {len(feature_names)}")
-    print(f"\nFeature names saved to data_out/feature_names.txt")
+    if DEBUG:
+        with open('data_out/feature_names.txt', 'w') as f:
+            f.write("All feature names after preprocessing:\n")
+            f.write("=" * 50 + "\n")
+            for i, feature_name in enumerate(feature_names, 1):
+                f.write(f"{i:3d}. {feature_name}\n")
+            f.write(f"\nTotal number of features after preprocessing: {len(feature_names)}")
+        print(f"\nFeature names saved to data_out/feature_names.txt")
 
     # Get feature importance
     feature_importance = pd.DataFrame({
