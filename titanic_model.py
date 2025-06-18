@@ -8,7 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 import joblib
 import warnings
 import os
-from visualize import create_deck_side_heatmap, create_age_survival_histogram
+from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap
 warnings.filterwarnings('ignore')
 
 # Debug flag
@@ -37,6 +37,9 @@ def engineer_features(df):
     # Create StarboardBC feature
     df['StarboardBC'] = (df['Deck'].isin(['B', 'C'])) & (df['Side'] == 'S')
     
+    # Create Route feature (combines HomePlanet and Destination)
+    df['Route'] = df['HomePlanet'] + '_to_' + df['Destination']
+    
     return df
 
 def train_model():
@@ -51,6 +54,7 @@ def train_model():
     if VISUALIZE:
         create_deck_side_heatmap(df)
         create_age_survival_histogram(df)
+        create_destination_homeplanet_heatmap(df)
 
     # Display basic information about the dataset
     print("\nDataset Info:")
@@ -106,11 +110,21 @@ def train_model():
 
     # Save feature names to text file
     if DEBUG:
+        # Get feature importance
+        feature_importance = pd.DataFrame({
+            'feature': feature_names,
+            'importance': pipeline.named_steps['classifier'].feature_importances_
+        })
+        feature_importance = feature_importance.sort_values('importance', ascending=False)
+        feature_importance['rank'] = range(1, len(feature_importance) + 1)
+        
         with open('data_out/feature_names.txt', 'w') as f:
             f.write("All feature names after preprocessing:\n")
-            f.write("=" * 50 + "\n")
-            for i, feature_name in enumerate(feature_names, 1):
-                f.write(f"{i:3d}. {feature_name}\n")
+            f.write("=" * 70 + "\n")
+            f.write(f"{'Rank':<6} {'Feature':<50} {'Importance':<12}\n")
+            f.write("-" * 70 + "\n")
+            for _, row in feature_importance.iterrows():
+                f.write(f"{row['rank']:<6} {row['feature']:<50} {row['importance']:<12.6f}\n")
             f.write(f"\nTotal number of features after preprocessing: {len(feature_names)}")
         print(f"\nFeature names saved to data_out/feature_names.txt")
 

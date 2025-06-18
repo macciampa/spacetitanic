@@ -87,4 +87,47 @@ def create_age_survival_histogram(df):
     # Print age statistics (only for ages with sufficient data)
     print("\nAge Survival Statistics (ages with 5+ passengers):")
     filtered_stats = age_survival[age_survival['count'] >= 5].sort_values('survival_percentage', ascending=False)
-    print(filtered_stats[['Age', 'count', 'survival_percentage']]) 
+    print(filtered_stats[['Age', 'count', 'survival_percentage']])
+
+def create_destination_homeplanet_heatmap(df):
+    """Create a heatmap showing transport percentage for destination/home planet combinations"""
+    # Create pivot table for transport percentage
+    pivot_data = df.groupby(['Destination', 'HomePlanet'])['Transported'].agg(['count', 'sum']).reset_index()
+    pivot_data['transport_percentage'] = (pivot_data['sum'] / pivot_data['count'] * 100).round(1)
+    
+    # Create pivot table for heatmap
+    heatmap_data = pivot_data.pivot(index='Destination', columns='HomePlanet', values='transport_percentage')
+    
+    # Create pivot table for counts
+    count_data = pivot_data.pivot(index='Destination', columns='HomePlanet', values='count')
+    
+    # Create the heatmap
+    plt.figure(figsize=(12, 8))
+    
+    # Create custom annotations with percentage and count
+    annot_data = heatmap_data.copy()
+    for destination in heatmap_data.index:
+        for planet in heatmap_data.columns:
+            if pd.notna(heatmap_data.loc[destination, planet]) and pd.notna(count_data.loc[destination, planet]):
+                percentage = heatmap_data.loc[destination, planet]
+                count = int(count_data.loc[destination, planet])
+                annot_data.loc[destination, planet] = f"{percentage}% ({count})"
+            else:
+                annot_data.loc[destination, planet] = ""
+    
+    sns.heatmap(heatmap_data, annot=annot_data, fmt='', cmap='RdYlBu_r', 
+                cbar_kws={'label': 'Transport Percentage (%)'})
+    plt.title('Transport Percentage by Destination and Home Planet', fontsize=16, pad=20)
+    plt.xlabel('Home Planet', fontsize=12)
+    plt.ylabel('Destination', fontsize=12)
+    
+    # Save the plot
+    plt.tight_layout()
+    plt.savefig('data_out/destination_homeplanet_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
+    print("Destination/Home Planet heatmap saved to data_out/destination_homeplanet_heatmap.png")
+    
+    # Print summary statistics
+    print("\nDestination/Home Planet Transport Statistics:")
+    print(pivot_data.sort_values('transport_percentage', ascending=False)) 
