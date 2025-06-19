@@ -25,6 +25,17 @@ os.makedirs('data_out', exist_ok=True)
 
 def engineer_features(df):
     """Apply feature engineering to the dataset"""
+    # Custom imputer for Cabin: fill missing with mode among same group
+    # df['Group'] = df['PassengerId'].str.split('_').str[0]
+    # mask_missing_cabin = df['Cabin'].isnull()
+    # for idx in df[mask_missing_cabin].index:
+    #     group = df.at[idx, 'Group']
+    #     candidates = df[(df['Group'] == group) & (~df['Cabin'].isnull())]['Cabin']
+    #     if not candidates.empty:
+    #         mode = candidates.mode().iloc[0]
+    #         df.at[idx, 'Cabin'] = mode
+    # df.drop(columns=['Group'], inplace=True)
+    
     # Custom imputer for HomePlanet: fill missing with mode among same last name
     # df['LastName'] = df['Name'].fillna('Unknown').str.split(' ').str[-1]
     # mask_missing = df['HomePlanet'].isnull()
