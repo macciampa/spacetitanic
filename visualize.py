@@ -1,8 +1,9 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
-def create_deck_side_heatmap(df):
+def create_deck_side_heatmap(df, stats=False):
     """Create a heatmap showing transport percentage for deck/side combinations"""
     # Create pivot table for transport percentage
     pivot_data = df.groupby(['Deck', 'Side'])['Transported'].agg(['count', 'sum']).reset_index()
@@ -36,16 +37,16 @@ def create_deck_side_heatmap(df):
     
     # Save the plot
     plt.tight_layout()
-    plt.savefig('data_out/deck_side_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.savefig('data_out/visualizations/deck_side_heatmap.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("Deck/Side heatmap saved to data_out/deck_side_heatmap.png")
+    print("Deck/Side heatmap saved to data_out/visualizations/deck_side_heatmap.png")
     
-    # Print summary statistics
-    print("\nDeck/Side Transport Statistics:")
-    print(pivot_data.sort_values('transport_percentage', ascending=False))
+    if stats:
+        print("\nDeck/Side Transport Statistics:")
+        print(pivot_data.sort_values('transport_percentage', ascending=False))
 
-def create_age_survival_histogram(df):
+def create_age_survival_histogram(df, stats=False):
     """Create a histogram showing age distribution and survival percentage"""
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
@@ -79,17 +80,17 @@ def create_age_survival_histogram(df):
                     f'n={count}', ha='center', va='center', fontweight='bold', color='white', fontsize=8)
     
     plt.tight_layout()
-    plt.savefig('data_out/age_survival_histogram.png', dpi=300, bbox_inches='tight')
+    plt.savefig('data_out/visualizations/age_survival_histogram.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("Age survival histogram saved to data_out/age_survival_histogram.png")
+    print("Age survival histogram saved to data_out/visualizations/age_survival_histogram.png")
     
-    # Print age statistics (only for ages with sufficient data)
-    print("\nAge Survival Statistics (ages with 5+ passengers):")
-    filtered_stats = age_survival[age_survival['count'] >= 5].sort_values('survival_percentage', ascending=False)
-    print(filtered_stats[['Age', 'count', 'survival_percentage']])
+    if stats:
+        print("\nAge Survival Statistics (ages with 5+ passengers):")
+        filtered_stats = age_survival[age_survival['count'] >= 5].sort_values('survival_percentage', ascending=False)
+        print(filtered_stats[['Age', 'count', 'survival_percentage']])
 
-def create_destination_homeplanet_heatmap(df):
+def create_destination_homeplanet_heatmap(df, stats=False):
     """Create a heatmap showing transport percentage for destination/home planet combinations"""
     # Create pivot table for transport percentage
     pivot_data = df.groupby(['Destination', 'HomePlanet'])['Transported'].agg(['count', 'sum']).reset_index()
@@ -123,16 +124,16 @@ def create_destination_homeplanet_heatmap(df):
     
     # Save the plot
     plt.tight_layout()
-    plt.savefig('data_out/destination_homeplanet_heatmap.png', dpi=300, bbox_inches='tight')
+    plt.savefig('data_out/visualizations/destination_homeplanet_heatmap.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("Destination/Home Planet heatmap saved to data_out/destination_homeplanet_heatmap.png")
+    print("Destination/Home Planet heatmap saved to data_out/visualizations/destination_homeplanet_heatmap.png")
     
-    # Print summary statistics
-    print("\nDestination/Home Planet Transport Statistics:")
-    print(pivot_data.sort_values('transport_percentage', ascending=False))
+    if stats:
+        print("\nDestination/Home Planet Transport Statistics:")
+        print(pivot_data.sort_values('transport_percentage', ascending=False))
 
-def create_spending_survival_histogram(df):
+def create_spending_survival_histogram(df, stats=False):
     """Create a histogram showing spending distribution and survival percentage by spending bins"""
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
@@ -172,11 +173,14 @@ def create_spending_survival_histogram(df):
                 f'n={count}', ha='center', va='center', fontweight='bold', color='white', fontsize=8)
     
     plt.tight_layout()
-    plt.savefig('data_out/spending_survival_histogram.png', dpi=300, bbox_inches='tight')
+    plt.savefig('data_out/visualizations/spending_survival_histogram.png', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print("Spending survival histogram saved to data_out/spending_survival_histogram.png")
+    print("Spending survival histogram saved to data_out/visualizations/spending_survival_histogram.png")
     
-    # Print spending group statistics
-    print("\nSpending Group Survival Statistics:")
-    print(spending_survival[['SpendingGroup', 'count', 'survival_percentage']].sort_values('survival_percentage', ascending=False)) 
+    if stats:
+        print("\nSpending Group Survival Statistics:")
+        print(spending_survival[['SpendingGroup', 'count', 'survival_percentage']].sort_values('survival_percentage', ascending=False))
+
+# Ensure the visualizations directory exists
+os.makedirs('data_out/visualizations', exist_ok=True) 

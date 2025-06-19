@@ -15,13 +15,29 @@ warnings.filterwarnings('ignore')
 DEBUG = True
 
 # Visualization flag
-VISUALIZE = True
+VISUALIZE = False
+
+# Stats flag
+STATS = False
 
 # Create output directory if it doesn't exist
 os.makedirs('data_out', exist_ok=True)
 
 def engineer_features(df):
     """Apply feature engineering to the dataset"""
+    # Custom imputer for HomePlanet: fill missing with mode among same last name
+    # df['LastName'] = df['Name'].fillna('Unknown').str.split(' ').str[-1]
+    # mask_missing = df['HomePlanet'].isnull()
+    # for idx in df[mask_missing].index:
+    #     last_name = df.at[idx, 'LastName']
+    #     if last_name == "Unknown":
+    #         continue  # Skip imputation for missing names
+    #     candidates = df[(df['LastName'] == last_name) & (~df['HomePlanet'].isnull())]['HomePlanet']
+    #     if not candidates.empty:
+    #         mode = candidates.mode().iloc[0]
+    #         df.at[idx, 'HomePlanet'] = mode
+    # df.drop(columns=['LastName'], inplace=True)
+    
     # Create Infant feature
     df['Infant'] = df['Age'].fillna(-1) <= 4
 
@@ -55,10 +71,10 @@ def train_model():
 
     # Create deck/side heatmap visualization
     if VISUALIZE:
-        create_deck_side_heatmap(df)
-        create_age_survival_histogram(df)
-        create_destination_homeplanet_heatmap(df)
-        create_spending_survival_histogram(df)
+        create_deck_side_heatmap(df, stats=STATS)
+        create_age_survival_histogram(df, stats=STATS)
+        create_destination_homeplanet_heatmap(df, stats=STATS)
+        create_spending_survival_histogram(df, stats=STATS)
 
     # Display basic information about the dataset
     print("\nDataset Info:")
