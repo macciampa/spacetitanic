@@ -8,7 +8,7 @@ from sklearn.preprocessing import OneHotEncoder
 import joblib
 import warnings
 import os
-from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram, create_age_transported_distribution
+from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram, create_age_transported_distribution, create_cabin_num_survival_histogram
 from sklearn.model_selection import cross_val_score
 warnings.filterwarnings('ignore')
 
@@ -79,6 +79,13 @@ def engineer_features(df):
     # Remove temporary Group column
     # df.drop(columns=['Group'], inplace=True)
     
+    # CabinNumRegion feature: bin Num into regions of size 100
+    df['Num'] = pd.to_numeric(df['Num'], errors='coerce')
+    min_num = int(df['Num'].min())
+    max_num = int(df['Num'].max())
+    bin_edges = list(range(min_num, max_num + 101, 100))
+    df['CabinNumRegion'] = pd.cut(df['Num'], bins=bin_edges)
+    
     return df
 
 def train_model():
@@ -96,6 +103,7 @@ def train_model():
         create_destination_homeplanet_heatmap(df, stats=STATS)
         create_spending_survival_histogram(df, stats=STATS)
         create_age_transported_distribution(df)
+        create_cabin_num_survival_histogram(df, stats=STATS)
 
     # Display basic information about the dataset
     print("\nDataset Info:")

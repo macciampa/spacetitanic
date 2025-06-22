@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import numpy as np
 
 def create_deck_side_heatmap(df, stats=False):
     """Create a heatmap showing transport percentage for deck/side combinations"""
@@ -194,6 +195,60 @@ def create_age_transported_distribution(df):
     plt.savefig('data_out/visualizations/age_transported_distribution.png', dpi=300, bbox_inches='tight')
     plt.close()
     print("Age transported distribution saved to data_out/visualizations/age_transported_distribution.png")
+
+def create_cabin_num_survival_histogram(df, stats=False):
+    """Create a histogram showing cabin number distribution and survival percentage by cabin number"""
+    # Convert Num to numeric, handle missing values
+    df['Num'] = pd.to_numeric(df['Num'], errors='coerce')
+    
+    # Determine bin edges with size 100
+    min_num = int(df['Num'].min())
+    max_num = int(df['Num'].max())
+    bin_edges = list(range(min_num, max_num + 101, 100))
+    
+    # Create figure with two subplots
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+    
+    # Plot 1: Cabin number distribution (bins of size 100)
+    ax1.hist(df['Num'].dropna(), bins=bin_edges, alpha=0.7, color='slateblue', edgecolor='black')
+    ax1.set_title('Cabin Number Distribution', fontsize=14, pad=10)
+    ax1.set_xlabel('Cabin Number')
+    ax1.set_ylabel('Count')
+    ax1.grid(True, alpha=0.3)
+    
+    # Plot 2: Survival percentage by cabin number bins (bins of size 100)
+    df['NumBin'] = pd.cut(df['Num'], bins=bin_edges)
+    num_survival = df.groupby('NumBin')['Transported'].agg(['count', 'sum']).reset_index()
+    num_survival['survival_percentage'] = (num_survival['sum'] / num_survival['count'] * 100).round(1)
+    
+    # Create bar plot
+    bars = ax2.bar(range(len(num_survival)), num_survival['survival_percentage'], 
+                   color='mediumseagreen', alpha=0.7, edgecolor='black')
+    ax2.set_title('Survival Percentage by Cabin Number Bin', fontsize=14, pad=10)
+    ax2.set_xlabel('Cabin Number Bin')
+    ax2.set_ylabel('Survival Percentage (%)')
+    ax2.set_xticks(range(len(num_survival)))
+    ax2.set_xticklabels([str(b) for b in num_survival['NumBin']], rotation=45, ha='right', fontsize=8)
+    ax2.grid(True, alpha=0.3)
+    
+    # Add value labels on bars
+    for bar, percentage, count in zip(bars, num_survival['survival_percentage'], num_survival['count']):
+        height = bar.get_height()
+        if not np.isnan(percentage):
+            ax2.text(bar.get_x() + bar.get_width()/2., height + 1,
+                    f'{percentage}%', ha='center', va='bottom', fontweight='bold', fontsize=8)
+            ax2.text(bar.get_x() + bar.get_width()/2., height/2,
+                    f'n={int(count)}', ha='center', va='center', fontweight='bold', color='white', fontsize=7)
+    
+    plt.tight_layout()
+    os.makedirs('data_out/visualizations', exist_ok=True)
+    plt.savefig('data_out/visualizations/cabin_num_survival_histogram.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print("Cabin number survival histogram saved to data_out/visualizations/cabin_num_survival_histogram.png")
+    
+    if stats:
+        print("\nCabin Number Survival Statistics:")
+        print(num_survival[['NumBin', 'count', 'survival_percentage']].sort_values('survival_percentage', ascending=False))
 
 # Ensure the visualizations directory exists
 os.makedirs('data_out/visualizations', exist_ok=True) 
