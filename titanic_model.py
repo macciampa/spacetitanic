@@ -80,11 +80,11 @@ def engineer_features(df):
     # df.drop(columns=['Group'], inplace=True)
     
     # CabinNumRegion feature: bin Num into regions of size 100
-    df['Num'] = pd.to_numeric(df['Num'], errors='coerce')
-    min_num = int(df['Num'].min())
-    max_num = int(df['Num'].max())
-    bin_edges = list(range(min_num, max_num + 101, 100))
-    df['CabinNumRegion'] = pd.cut(df['Num'], bins=bin_edges)
+    # df['Num'] = pd.to_numeric(df['Num'], errors='coerce')
+    # min_num = int(df['Num'].min())
+    # max_num = int(df['Num'].max())
+    # bin_edges = list(range(min_num, max_num + 101, 100))
+    # df['CabinNumRegion'] = pd.cut(df['Num'], bins=bin_edges).astype(str)
     
     return df
 
