@@ -88,6 +88,14 @@ def engineer_features(df):
     
     return df
 
+def drop_unused_features(df, is_training=False):
+    """Drop the same features in both training and prediction. Drops 'Transported' only in training."""
+    drop_cols = ['PassengerId', 'Name', 'Cabin', 'Num']
+    if is_training:
+        drop_cols = ['Transported'] + drop_cols
+    drop_cols = [col for col in drop_cols if col in df.columns]
+    return df.drop(columns=drop_cols)
+
 def train_model():
     # Load the data
     print("Loading training data...")
@@ -111,9 +119,9 @@ def train_model():
     print("\nMissing values:")
     print(df.isnull().sum())
 
-    # Separate features and target
-    X = df.drop(['Transported', 'PassengerId', 'Name', 'Cabin', 'Num'], axis=1)
+    # Separate features and target (drop unused features here)
     y = df['Transported']
+    X = drop_unused_features(df, is_training=True)
 
     # Handle categorical variables
     categorical_cols = X.select_dtypes(include=['object', 'bool']).columns
@@ -210,7 +218,7 @@ def make_predictions(pipeline=None):
     passenger_ids = test_df['PassengerId']
 
     # Prepare features (same as in training)
-    X_test = test_df.drop(['PassengerId'], axis=1)
+    X_test = drop_unused_features(test_df, is_training=False)
 
     # Load the trained pipeline if not provided
     if pipeline is None:
@@ -240,4 +248,4 @@ if __name__ == "__main__":
     pipeline = train_model()
     
     # Make predictions
-    make_predictions(pipeline) 
+    make_predictions(pipeline)
