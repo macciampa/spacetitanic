@@ -182,5 +182,18 @@ def create_spending_survival_histogram(df, stats=False):
         print("\nSpending Group Survival Statistics:")
         print(spending_survival[['SpendingGroup', 'count', 'survival_percentage']].sort_values('survival_percentage', ascending=False))
 
+def create_age_transported_distribution(df):
+    """Create a histogram showing age distribution by transport status"""
+    plt.figure(figsize=(16,6))
+    sns.histplot(x=df["Age"], hue="Transported", data=df, kde=True, palette="Set2")
+    plt.title("Age Feature Distribution by Transport Status", fontsize=16, pad=20)
+    plt.xlabel("Age", fontsize=12)
+    plt.ylabel("Count", fontsize=12)
+    plt.legend(title="Transported", labels=["No", "Yes"])
+    plt.tight_layout()
+    plt.savefig('data_out/visualizations/age_transported_distribution.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print("Age transported distribution saved to data_out/visualizations/age_transported_distribution.png")
+
 # Ensure the visualizations directory exists
 os.makedirs('data_out/visualizations', exist_ok=True) 

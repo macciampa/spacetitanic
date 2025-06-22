@@ -8,14 +8,15 @@ from sklearn.preprocessing import OneHotEncoder
 import joblib
 import warnings
 import os
-from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram
+from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram, create_age_transported_distribution
+from sklearn.model_selection import cross_val_score
 warnings.filterwarnings('ignore')
 
 # Debug flag
 DEBUG = True
 
 # Visualization flag
-VISUALIZE = False
+VISUALIZE = True
 
 # Stats flag
 STATS = False
@@ -86,6 +87,7 @@ def train_model():
         create_age_survival_histogram(df, stats=STATS)
         create_destination_homeplanet_heatmap(df, stats=STATS)
         create_spending_survival_histogram(df, stats=STATS)
+        create_age_transported_distribution(df)
 
     # Display basic information about the dataset
     print("\nDataset Info:")
@@ -132,9 +134,14 @@ def train_model():
         ))
     ])
 
-    # Train model on all data
-    print("\nTraining model...")
+    # Fit pipeline and check for under/overfitting
     pipeline.fit(X, y)
+    train_score = pipeline.score(X, y)
+    cv_scores = cross_val_score(pipeline, X, y, cv=5)
+    cv_mean = cv_scores.mean()
+    print(f"\nTraining score: {train_score:.4f}")
+    print(f"Cross-validation mean score: {cv_mean:.4f}")
+    print(f"Cross-validation scores: {cv_scores}")
 
     # Get feature names after preprocessing
     feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
