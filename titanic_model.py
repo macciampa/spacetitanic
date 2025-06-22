@@ -70,6 +70,14 @@ def engineer_features(df):
     
     # Create Route feature (combines HomePlanet and Destination)
     df['Route'] = df['HomePlanet'] + '_to_' + df['Destination']
+
+    # Create Group and GroupSize features
+    # df['Group'] = df['PassengerId'].str.split('_').str[0]
+    # group_sizes = df.groupby('Group')['PassengerId'].transform('count')
+    # df['GroupSize'] = group_sizes
+    # df['TravellingSolo'] = df['GroupSize'] == 1
+    # Remove temporary Group column
+    # df.drop(columns=['Group'], inplace=True)
     
     return df
 
