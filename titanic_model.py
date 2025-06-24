@@ -86,6 +86,9 @@ def engineer_features(df):
     # bin_edges = list(range(min_num, max_num + 101, 100))
     # df['CabinNumRegion'] = pd.cut(df['Num'], bins=bin_edges).astype(str)
     
+    # AgeGroup feature: 0-18, 19-39, 40+
+    # df['AgeGroup'] = pd.cut(df['Age'], bins=[-float('inf'), 18, 39, float('inf')], labels=['0-18', '19-39', '40+']).astype(str)
+    
     return df
 
 def drop_unused_features(df, is_training=False):
