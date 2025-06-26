@@ -6,12 +6,12 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
+from sklearn.linear_model import LogisticRegression, RidgeClassifier, SGDClassifier, Perceptron, PassiveAggressiveClassifier
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
+from sklearn.naive_bayes import GaussianNB, BernoulliNB, MultinomialNB, ComplementNB
+from sklearn.tree import DecisionTreeClassifier, ExtraTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier, BaggingClassifier, VotingClassifier, StackingClassifier
 from xgboost import XGBClassifier
 import lightgbm as lgb
 import catboost as cb
@@ -21,6 +21,8 @@ from titanic_model import engineer_features, drop_unused_features
 import time
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis, QuadraticDiscriminantAnalysis
 
 warnings.filterwarnings('ignore')
 
@@ -72,17 +74,48 @@ def create_preprocessing_pipeline():
 def get_models():
     """Define all models to compare"""
     models = {
+        # Linear Models
         'LogisticRegression': LogisticRegression(random_state=42, max_iter=1000),
+        'RidgeClassifier': RidgeClassifier(random_state=42),
+        'SGDClassifier': SGDClassifier(random_state=42, max_iter=1000),
+        'Perceptron': Perceptron(random_state=42, max_iter=1000),
+        
+        # Neighbor-based Models
         'KNeighborsClassifier': KNeighborsClassifier(n_neighbors=5),
-        # 'SVC': SVC(random_state=42, probability=True),
+        'NearestCentroid': NearestCentroid(),
+        
+        # Naive Bayes Models
         'GaussianNB': GaussianNB(),
+        'BernoulliNB': BernoulliNB(),
+        'MultinomialNB': MultinomialNB(),
+        'ComplementNB': ComplementNB(),
+        
+        # Tree-based Models
         'DecisionTreeClassifier': DecisionTreeClassifier(random_state=42),
+        'ExtraTreeClassifier': ExtraTreeClassifier(random_state=42),
+        
+        # Ensemble Methods
         'RandomForestClassifier': RandomForestClassifier(n_estimators=100, random_state=42),
+        'ExtraTreesClassifier': ExtraTreesClassifier(n_estimators=100, random_state=42),
         'AdaBoostClassifier': AdaBoostClassifier(n_estimators=100, random_state=42),
         'GradientBoostingClassifier': GradientBoostingClassifier(n_estimators=100, random_state=42),
+        
+        # Gradient Boosting Libraries
         'XGBClassifier': XGBClassifier(n_estimators=100, random_state=42, eval_metric='logloss'),
         'LGBMClassifier': lgb.LGBMClassifier(n_estimators=100, random_state=42, verbose=-1),
-        'CatBoostClassifier': cb.CatBoostClassifier(iterations=100, random_state=42, verbose=False, allow_writing_files=False)
+        'CatBoostClassifier': cb.CatBoostClassifier(iterations=100, random_state=42, verbose=False, allow_writing_files=False),
+        
+        # Discriminant Analysis
+        'LinearDiscriminantAnalysis': LinearDiscriminantAnalysis(),
+        'QuadraticDiscriminantAnalysis': QuadraticDiscriminantAnalysis(),
+        
+        # Bagging and Voting
+        'BaggingClassifier': BaggingClassifier(estimator=DecisionTreeClassifier(random_state=42)),
+        'VotingClassifier': VotingClassifier(estimators=[
+            ('lr', LogisticRegression(random_state=42)),
+            ('rf', RandomForestClassifier(n_estimators=100, random_state=42)),
+            ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42))
+        ], voting='hard'),
     }
     return models
 
@@ -101,10 +134,38 @@ def compare_models(X, y, cv_folds=5):
         start_time = time.time()
         
         # Create full pipeline
-        pipeline = Pipeline([
-            ('preprocessor', preprocessor),
-            ('classifier', model)
-        ])
+        if name in ['MultinomialNB', 'ComplementNB']:
+            # These models require non-negative data, so use different preprocessing
+            categorical_cols = ['HomePlanet', 'CryoSleep', 'Destination', 'VIP', 'Deck', 'Side', 
+                               'Infant', 'NoMoney', 'StarboardBC', 'Route']
+            numerical_cols = ['Age', 'RoomService', 'FoodCourt', 'ShoppingMall', 'Spa', 'VRDeck', 'TotalSpent']
+            
+            # For MultinomialNB and ComplementNB, use MinMaxScaler instead of StandardScaler
+            numerical_pipeline_nb = Pipeline([
+                ('imputer', SimpleImputer(strategy='median')),
+                ('scaler', MinMaxScaler())  # This ensures non-negative values
+            ])
+
+            categorical_pipeline = Pipeline([
+                ('imputer', SimpleImputer(strategy='most_frequent')),
+                ('onehot', OneHotEncoder(handle_unknown='ignore', sparse_output=False))
+            ])
+
+            preprocessor_nb = ColumnTransformer(
+                transformers=[
+                    ('num', numerical_pipeline_nb, numerical_cols),
+                    ('cat', categorical_pipeline, categorical_cols)
+                ])
+            
+            pipeline = Pipeline([
+                ('preprocessor', preprocessor_nb),
+                ('classifier', model)
+            ])
+        else:
+            pipeline = Pipeline([
+                ('preprocessor', preprocessor),
+                ('classifier', model)
+            ])
         
         # Perform cross-validation
         cv = StratifiedKFold(n_splits=cv_folds, shuffle=True, random_state=42)
