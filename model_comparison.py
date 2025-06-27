@@ -111,11 +111,11 @@ def get_models():
         
         # Bagging and Voting
         'BaggingClassifier': BaggingClassifier(estimator=DecisionTreeClassifier(random_state=42)),
-        'VotingClassifier': VotingClassifier(estimators=[
-            ('lr', LogisticRegression(random_state=42)),
-            ('rf', RandomForestClassifier(n_estimators=100, random_state=42)),
-            ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42))
-        ], voting='hard'),
+        # 'VotingClassifier': VotingClassifier(estimators=[
+        #     ('lr', LogisticRegression(random_state=42)),
+        #     ('rf', RandomForestClassifier(n_estimators=100, random_state=42)),
+        #     ('gb', GradientBoostingClassifier(n_estimators=100, random_state=42))
+        # ], voting='hard'),
     }
     return models
 
