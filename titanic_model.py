@@ -10,13 +10,14 @@ import warnings
 import os
 from visualize import create_deck_side_heatmap, create_age_survival_histogram, create_destination_homeplanet_heatmap, create_spending_survival_histogram, create_age_transported_distribution, create_cabin_num_survival_histogram
 from sklearn.model_selection import cross_val_score
+import catboost as cb
 warnings.filterwarnings('ignore')
 
 # Debug flag
-DEBUG = True
+DEBUG = False
 
 # Visualization flag
-VISUALIZE = True
+VISUALIZE = False
 
 # Stats flag
 STATS = False
@@ -117,10 +118,11 @@ def train_model():
         create_cabin_num_survival_histogram(df, stats=STATS)
 
     # Display basic information about the dataset
-    print("\nDataset Info:")
-    print(df.info())
-    print("\nMissing values:")
-    print(df.isnull().sum())
+    if DEBUG:
+        print("\nDataset Info:")
+        print(df.info())
+        print("\nMissing values:")
+        print(df.isnull().sum())
 
     # Separate features and target (drop unused features here)
     y = df['Transported']
@@ -148,27 +150,21 @@ def train_model():
             ('cat', categorical_pipeline, categorical_cols)
         ])
 
-    # Create full pipeline with preprocessing and model
+    # Create full pipeline with preprocessing and CatBoostClassifier
     pipeline = Pipeline([
         ('preprocessor', preprocessor),
-        ('classifier', XGBClassifier(
-            n_estimators=100,
-            learning_rate=0.1,
-            max_depth=5,
-            random_state=42,
-            use_label_encoder=False,
-            eval_metric='logloss'
-        ))
+        ('classifier', cb.CatBoostClassifier(verbose=0, random_state=42, allow_writing_files=False))
     ])
 
     # Fit pipeline and check for under/overfitting
     pipeline.fit(X, y)
-    train_score = pipeline.score(X, y)
-    cv_scores = cross_val_score(pipeline, X, y, cv=5)
-    cv_mean = cv_scores.mean()
-    print(f"\nTraining score: {train_score:.4f}")
-    print(f"Cross-validation mean score: {cv_mean:.4f}")
-    print(f"Cross-validation scores: {cv_scores}")
+    if DEBUG:
+        train_score = pipeline.score(X, y)
+        cv_scores = cross_val_score(pipeline, X, y, cv=5)
+        cv_mean = cv_scores.mean()
+        print(f"\nTraining score: {train_score:.4f}")
+        print(f"Cross-validation mean score: {cv_mean:.4f}")
+        print(f"Cross-validation scores: {cv_scores}")
 
     # Get feature names after preprocessing
     feature_names = pipeline.named_steps['preprocessor'].get_feature_names_out()
@@ -193,14 +189,14 @@ def train_model():
             f.write(f"\nTotal number of features after preprocessing: {len(feature_names)}")
         print(f"\nFeature names saved to data_out/feature_names.txt")
 
-    # Get feature importance
-    feature_importance = pd.DataFrame({
-        'feature': feature_names,
-        'importance': pipeline.named_steps['classifier'].feature_importances_
-    })
-    feature_importance = feature_importance.sort_values('importance', ascending=False)
-    print("\nTop 10 Most Important Features:")
-    print(feature_importance.head(10))
+        # Get feature importance
+        feature_importance = pd.DataFrame({
+            'feature': feature_names,
+            'importance': pipeline.named_steps['classifier'].feature_importances_
+        })
+        feature_importance = feature_importance.sort_values('importance', ascending=False)
+        print("\nTop 10 Most Important Features:")
+        print(feature_importance.head(10))
 
     # Save the trained pipeline
     print("\nSaving trained pipeline...")
